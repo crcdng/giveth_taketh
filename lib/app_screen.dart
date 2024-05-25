@@ -24,6 +24,8 @@ class _AppScreenState extends State<AppScreen> {
   late StreamSubscription<FilterEvent> _subscription;
   final _chainId = "11155111";
 
+  bool _walletConnected = false;
+
   final _formKey = GlobalKey<FormState>();
   final _controller = TextEditingController();
 
@@ -67,7 +69,9 @@ class _AppScreenState extends State<AppScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(successSnackBar);
+    if (_hash != "") {
+      ScaffoldMessenger.of(context).showSnackBar(successSnackBar);
+    }
   }
 
   void triggerGetBalanceDelayed() async {
@@ -84,7 +88,9 @@ class _AppScreenState extends State<AppScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(successSnackBar);
+    if (_hash != "") {
+      ScaffoldMessenger.of(context).showSnackBar(successSnackBar);
+    }
   }
 
   void triggerWithdraw(EtherAmount amount) async {
@@ -98,7 +104,12 @@ class _AppScreenState extends State<AppScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(validationSnackBar);
+    // RPCError
+    if (_hash == "") {
+      ScaffoldMessenger.of(context).showSnackBar(errorSnackBar);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(validationSnackBar);
+    }
     _controller.clear();
   }
 
@@ -113,7 +124,12 @@ class _AppScreenState extends State<AppScreen> {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(validationSnackBar);
+    // RPCError
+    if (_hash == "") {
+      ScaffoldMessenger.of(context).showSnackBar(errorSnackBar);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(validationSnackBar);
+    }
     _controller.clear();
   }
 
@@ -179,16 +195,20 @@ class _AppScreenState extends State<AppScreen> {
     final ethFunction = contract.function(functionName);
     EthPrivateKey credentials =
         EthPrivateKey.fromHex(constants.testPrivateKey); // Temp account
-    final result = await _ethClient.sendTransaction(
-        credentials,
-        Transaction.callContract(
-            contract: contract,
-            function: ethFunction,
-            parameters: params,
-            value: etherAmount),
-        chainId: null,
-        fetchChainIdFromNetworkId: true);
-    return result;
+    try {
+      final result = await _ethClient.sendTransaction(
+          credentials,
+          Transaction.callContract(
+              contract: contract,
+              function: ethFunction,
+              parameters: params,
+              value: etherAmount),
+          chainId: null,
+          fetchChainIdFromNetworkId: true);
+      return result;
+    } on RPCError {
+      return "";
+    }
   }
 
   // ---- w3modal
@@ -235,10 +255,18 @@ class _AppScreenState extends State<AppScreen> {
   }
 
   void _onModalConnect(ModalConnect? event) {
+    setState(() {
+      _walletConnected = true;
+    });
+
     if (kDebugMode) print("wallet connected");
   }
 
   void _onModalDisConnect(ModalDisconnect? event) {
+    setState(() {
+      _walletConnected = false;
+    });
+
     if (kDebugMode) print("wallet disconnected");
   }
 
@@ -247,6 +275,7 @@ class _AppScreenState extends State<AppScreen> {
   }
 
   void _onSessionExpire(SessionExpire? event) {
+    _walletConnected = false;
     if (kDebugMode) print("session expired");
   }
 
@@ -272,6 +301,7 @@ class _AppScreenState extends State<AppScreen> {
 
   @override
   void dispose() {
+    _walletConnected = false;
     _subscription.cancel();
     _controller.dispose();
     _w3mService.onModalConnect.unsubscribe(_onModalConnect);
@@ -285,6 +315,7 @@ class _AppScreenState extends State<AppScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print(_walletConnected);
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -295,7 +326,19 @@ class _AppScreenState extends State<AppScreen> {
           key: _formKey,
           child: Column(
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (_walletConnected)
+                      W3MAccountButton(service: _w3mService),
+                    W3MConnectWalletButton(service: _w3mService),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
               const Padding(
                 padding: EdgeInsets.all(20.0),
                 child: Text(
