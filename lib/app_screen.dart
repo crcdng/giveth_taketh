@@ -5,8 +5,9 @@ import 'package:giveth_taketh/info_screen.dart';
 import 'package:http/http.dart';
 // import 'package:web3dart/web3dart.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
-
 import 'constants.dart' as constants;
+
+typedef TransactionHash = String;
 
 class AppScreen extends StatefulWidget {
   const AppScreen({super.key});
@@ -21,6 +22,20 @@ class _AppScreenState extends State<AppScreen> {
   late W3MService _w3mService;
   final _chainId = "11155111";
 
+  // state
+
+  late double currentBalance;
+
+  // ---- transactions
+
+  Future<TransactionHash> deposit(EtherAmount etherAmount) async {
+    TransactionHash result = await transact(
+        functionName: "deposit", params: [], etherAmount: etherAmount);
+    return result;
+  }
+
+  // ---- subscription
+
   // ---- web3dart
 
   Future<DeployedContract> loadContractFromAbi() async {
@@ -32,6 +47,25 @@ class _AppScreenState extends State<AppScreen> {
     return contract;
   }
 
+  Future<TransactionHash> transact(
+      {required String functionName,
+      required List<dynamic> params,
+      EtherAmount? etherAmount}) async {
+    final contract = await loadContractFromAbi();
+    final ethFunction = contract.function(functionName);
+    EthPrivateKey credentials =
+        EthPrivateKey.fromHex(constants.testPrivateKey); // Temp account
+    final result = await _ethClient.sendTransaction(
+        credentials,
+        Transaction.callContract(
+            contract: contract,
+            function: ethFunction,
+            parameters: params,
+            value: etherAmount),
+        chainId: null,
+        fetchChainIdFromNetworkId: true);
+    return result;
+  }
   // ---- w3modal
 
   void initializeWeb3ModalService() async {
@@ -106,6 +140,8 @@ class _AppScreenState extends State<AppScreen> {
     _httpClient = Client();
     _ethClient = Web3Client(constants.jsonRpcUrl, _httpClient); // JSON rpc API
 
+    currentBalance = 10000000;
+
     initializeWeb3ModalService();
   }
 
@@ -127,14 +163,29 @@ class _AppScreenState extends State<AppScreen> {
         title: const Text('Giveth Taketh'),
       ),
       body: Center(
-        child: ElevatedButton(
-          child: const Text('Info'),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const InfoScreen()),
-            );
-          },
+        child: Column(
+          children: [
+            Text("Current Amount available: $currentBalance"),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              child: Text('Deposit'),
+              onPressed: () {
+                setState(() {
+                  deposit(EtherAmount.inWei(BigInt.from(50000000000000000)));
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              child: const Text('Info'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const InfoScreen()),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

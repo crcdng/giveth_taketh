@@ -9,7 +9,7 @@ class InfoScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('About Giveth Taketh'),
       ),
-      body: Center(
+      body: const Center(
         child: Text('About'),
       ),
     );
