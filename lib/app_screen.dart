@@ -57,6 +57,8 @@ class _AppScreenState extends State<AppScreen> {
     content: Text('SUCCESS: Operation validated'),
   );
 
+  // ---- web3dart
+
   void triggerGetBalance() async {
     setState(() {
       currentBalance = "";
@@ -168,8 +170,6 @@ class _AppScreenState extends State<AppScreen> {
     }
   }
 
-  // ---- web3dart
-
   Future<List<dynamic>> query(String functionName, List<dynamic> params) async {
     final contract = await loadContractFromAbi();
     final ethFunction = contract.function(functionName);
@@ -193,6 +193,7 @@ class _AppScreenState extends State<AppScreen> {
       EtherAmount? etherAmount}) async {
     final contract = await loadContractFromAbi();
     final ethFunction = contract.function(functionName);
+    // TODO replace with web3modal sign function
     EthPrivateKey credentials =
         EthPrivateKey.fromHex(constants.testPrivateKey); // Temp account
     try {
@@ -212,6 +213,22 @@ class _AppScreenState extends State<AppScreen> {
   }
 
   // ---- w3modal
+
+  // TODO integrate with transaction
+  void signMessage() async {
+    _w3mService.launchConnectedWallet();
+    if (kDebugMode) {
+      print("signed from address ${_w3mService.session!.address}");
+    }
+    await _w3mService.request(
+      topic: _w3mService.session?.topic ?? '',
+      chainId: 'eip155:$_chainId', // Connected chain id
+      request: SessionRequestParams(
+        method: 'personal_sign',
+        params: ['Sign this', _w3mService.session!.address],
+      ),
+    );
+  }
 
   void initializeWeb3ModalService() async {
     final Set<String> excludedWalletIds = {
