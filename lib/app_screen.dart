@@ -24,7 +24,7 @@ class _AppScreenState extends State<AppScreen> {
 
   // state
 
-  late double currentBalance;
+  String? currentBalance;
 
   // ---- transactions
 
@@ -34,9 +34,32 @@ class _AppScreenState extends State<AppScreen> {
     return result;
   }
 
+  // ---- queries
+
+  Future<void> getBalance(String targetAdress) async {
+    List<dynamic> result = await query("getBalance", []);
+
+    var rawBalance = result.firstOrNull;
+    if (rawBalance != null) {
+      final balanceEther = EtherAmount.fromBigInt(EtherUnit.wei, rawBalance)
+          .getValueInUnit(EtherUnit.ether);
+      setState(() {
+        currentBalance = balanceEther.toString();
+      });
+    }
+  }
+
   // ---- subscription
 
   // ---- web3dart
+
+  Future<List<dynamic>> query(String functionName, List<dynamic> params) async {
+    final contract = await loadContractFromAbi();
+    final ethFunction = contract.function(functionName);
+    final result = await _ethClient.call(
+        contract: contract, function: ethFunction, params: params);
+    return result;
+  }
 
   Future<DeployedContract> loadContractFromAbi() async {
     String abiString = await rootBundle.loadString('assets/abi.json');
@@ -66,6 +89,7 @@ class _AppScreenState extends State<AppScreen> {
         fetchChainIdFromNetworkId: true);
     return result;
   }
+
   // ---- w3modal
 
   void initializeWeb3ModalService() async {
@@ -140,8 +164,7 @@ class _AppScreenState extends State<AppScreen> {
     _httpClient = Client();
     _ethClient = Web3Client(constants.jsonRpcUrl, _httpClient); // JSON rpc API
 
-    currentBalance = 10000000;
-
+    getBalance(constants.contractAddress);
     initializeWeb3ModalService();
   }
 
@@ -165,7 +188,7 @@ class _AppScreenState extends State<AppScreen> {
       body: Center(
         child: Column(
           children: [
-            Text("Current Amount available: $currentBalance"),
+            Text("Current Amount available: ${currentBalance ?? "---"}"),
             const SizedBox(height: 20),
             ElevatedButton(
               child: Text('Deposit'),
