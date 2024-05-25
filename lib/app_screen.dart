@@ -34,6 +34,17 @@ class _AppScreenState extends State<AppScreen> {
     return result;
   }
 
+  Future<TransactionHash> withdraw(EtherAmount etherAmount) async {
+    final amountWei = etherAmount.getInWei;
+    final address = EthPrivateKey.fromHex(constants.testPrivateKey).address;
+    // final address = "0x64Af60D67106Ed3a15fFb2dff6aDEE510e019f78";
+    // final address = _w3mService.session!.address;
+
+    TransactionHash result =
+        await transact(functionName: "transfer", params: [address, amountWei]);
+    return result;
+  }
+
   // ---- queries
 
   Future<void> getBalance(String targetAdress) async {
@@ -191,10 +202,19 @@ class _AppScreenState extends State<AppScreen> {
             Text("Current Amount available: ${currentBalance ?? "---"}"),
             const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('Deposit'),
+              child: const Text('Deposit'),
               onPressed: () {
                 setState(() {
                   deposit(EtherAmount.inWei(BigInt.from(50000000000000000)));
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              child: Text('Withdraw'),
+              onPressed: () {
+                setState(() {
+                  withdraw(EtherAmount.inWei(BigInt.from(30000000000000000)));
                 });
               },
             ),
