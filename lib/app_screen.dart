@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +21,7 @@ class _AppScreenState extends State<AppScreen> {
   late Client _httpClient;
   late Web3Client _ethClient;
   late W3MService _w3mService;
+  late StreamSubscription<FilterEvent> _subscription;
   final _chainId = "11155111";
 
   final _formKey = GlobalKey<FormState>();
@@ -28,7 +29,93 @@ class _AppScreenState extends State<AppScreen> {
 
   // state
 
-  String? currentBalance;
+  String currentBalance = "";
+
+  TransactionHash? _hash;
+
+  // ---- flutter
+
+  final progressSnackBar = const SnackBar(
+    backgroundColor: Colors.purple,
+    content: Text('Operation submitted...'),
+  );
+
+  final errorSnackBar = const SnackBar(
+    backgroundColor: Colors.red,
+    content: Text('ERROR: Operation did not succeed'),
+  );
+
+  final validationSnackBar = const SnackBar(
+    backgroundColor: Colors.orange,
+    content: Text('Validation in progress...'),
+  );
+
+  final successSnackBar = const SnackBar(
+    backgroundColor: Colors.green,
+    content: Text('SUCCESS: Operation validated'),
+  );
+
+  void triggerGetBalance() async {
+    setState(() {
+      currentBalance = "";
+    });
+
+    final balance = await getBalance(constants.contractAddress);
+    setState(() {
+      currentBalance = balance;
+    });
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(successSnackBar);
+  }
+
+  void triggerGetBalanceDelayed() async {
+    setState(() {
+      currentBalance = "";
+    });
+
+    await Future.delayed(const Duration(seconds: 15));
+
+    final balance = await getBalance(constants.contractAddress);
+    setState(() {
+      currentBalance = balance;
+    });
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(successSnackBar);
+  }
+
+  void triggerWithdraw(EtherAmount amount) async {
+    ScaffoldMessenger.of(context).showSnackBar(progressSnackBar);
+    final hash = await withdraw(amount);
+
+    setState(() {
+      _hash = hash;
+    });
+
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(validationSnackBar);
+    _controller.clear();
+  }
+
+  Future<void> triggerDeposit(EtherAmount amount) async {
+    ScaffoldMessenger.of(context).showSnackBar(progressSnackBar);
+    final hash = await deposit(amount);
+
+    setState(() {
+      _hash = hash;
+    });
+
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(validationSnackBar);
+    _controller.clear();
+  }
 
   // ---- transactions
 
@@ -51,20 +138,19 @@ class _AppScreenState extends State<AppScreen> {
 
   // ---- queries
 
-  Future<void> getBalance(String targetAdress) async {
+  Future<String> getBalance(String targetAdress) async {
     List<dynamic> result = await query("getBalance", []);
-
     var rawBalance = result.firstOrNull;
+    print(rawBalance);
+
     if (rawBalance != null) {
       final balanceEther = EtherAmount.fromBigInt(EtherUnit.wei, rawBalance)
           .getValueInUnit(EtherUnit.ether);
-      setState(() {
-        currentBalance = balanceEther.toString();
-      });
+      return balanceEther.toString();
+    } else {
+      return "";
     }
   }
-
-  // ---- subscription
 
   // ---- web3dart
 
@@ -177,14 +263,16 @@ class _AppScreenState extends State<AppScreen> {
   void initState() {
     super.initState();
     _httpClient = Client();
-    _ethClient = Web3Client(constants.jsonRpcUrl, _httpClient); // JSON rpc API
-
-    getBalance(constants.contractAddress);
+    _ethClient = Web3Client(constants.jsonRpcUrl, _httpClient)
+      ..printErrors = true;
+    // JSON rpc API
+    triggerGetBalance();
     initializeWeb3ModalService();
   }
 
   @override
   void dispose() {
+    _subscription.cancel();
     _controller.dispose();
     _w3mService.onModalConnect.unsubscribe(_onModalConnect);
     _w3mService.onModalDisconnect.unsubscribe(_onModalDisConnect);
@@ -221,11 +309,29 @@ class _AppScreenState extends State<AppScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text("Current Amount available: ${currentBalance ?? "---"} ETH"),
+              currentBalance == ""
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Retrieving Balance"),
+                        Transform.scale(
+                          scale: 0.2,
+                          child: const CircularProgressIndicator(),
+                        )
+                      ],
+                    )
+                  : Text("Available Balance: $currentBalance ETH"),
+              const SizedBox(height: 20),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 60.0),
+                child: Text("Note this prototype runs on the Sepolia testnet.",
+                    style: TextStyle(color: Colors.red)),
+              ),
               const SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 60.0),
                 child: TextFormField(
+                  autofocus: true,
                   keyboardType: TextInputType.number,
                   controller: _controller,
                   validator: (value) {
@@ -249,16 +355,15 @@ class _AppScreenState extends State<AppScreen> {
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        setState(() {
-                          withdraw(
-                            EtherAmount.fromBigInt(
-                              EtherUnit.ether,
-                              BigInt.from(
-                                double.parse(_controller.value.text),
-                              ),
-                            ),
-                          );
-                        });
+                        final etherAmount = EtherAmount.fromBigInt(
+                          EtherUnit.ether,
+                          BigInt.from(
+                            double.parse(_controller.value.text),
+                          ),
+                        );
+                        triggerWithdraw(etherAmount);
+                        triggerGetBalanceDelayed();
+                        FocusManager.instance.primaryFocus?.unfocus();
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -270,17 +375,16 @@ class _AppScreenState extends State<AppScreen> {
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
+                        final etherAmount = EtherAmount.fromBigInt(
+                          EtherUnit.ether,
+                          BigInt.from(
+                            double.parse(_controller.value.text),
+                          ),
+                        );
                         // validation guarantees a double
-                        setState(() {
-                          deposit(
-                            EtherAmount.fromBigInt(
-                              EtherUnit.ether,
-                              BigInt.from(
-                                double.parse(_controller.value.text),
-                              ),
-                            ),
-                          );
-                        });
+                        triggerDeposit(etherAmount);
+                        triggerGetBalanceDelayed();
+                        FocusManager.instance.primaryFocus?.unfocus();
                       }
                     },
                     style: ElevatedButton.styleFrom(
