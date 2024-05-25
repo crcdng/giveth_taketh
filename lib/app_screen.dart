@@ -1,7 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:giveth_taketh/info_screen.dart';
 import 'package:http/http.dart';
 // import 'package:web3dart/web3dart.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
@@ -21,6 +22,9 @@ class _AppScreenState extends State<AppScreen> {
   late Web3Client _ethClient;
   late W3MService _w3mService;
   final _chainId = "11155111";
+
+  final _formKey = GlobalKey<FormState>();
+  final _controller = TextEditingController();
 
   // state
 
@@ -181,6 +185,7 @@ class _AppScreenState extends State<AppScreen> {
 
   @override
   void dispose() {
+    _controller.dispose();
     _w3mService.onModalConnect.unsubscribe(_onModalConnect);
     _w3mService.onModalDisconnect.unsubscribe(_onModalDisConnect);
     _w3mService.onModalError.unsubscribe(_onModalError);
@@ -193,42 +198,101 @@ class _AppScreenState extends State<AppScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text('Giveth Taketh'),
+        title: const Center(child: Text('GivETH TakETH')),
       ),
       body: Center(
-        child: Column(
-          children: [
-            Text("Current Amount available: ${currentBalance ?? "---"}"),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              child: const Text('Deposit'),
-              onPressed: () {
-                setState(() {
-                  deposit(EtherAmount.inWei(BigInt.from(50000000000000000)));
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              child: Text('Withdraw'),
-              onPressed: () {
-                setState(() {
-                  withdraw(EtherAmount.inWei(BigInt.from(30000000000000000)));
-                });
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              child: const Text('Info'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const InfoScreen()),
-                );
-              },
-            ),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text(
+                    "A tiny socio-economic experiment. \nThis is a free and open account. You can deposit ETH (as much as you like) or withdraw ETH (up to the current balance). There are no rules."),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text(
+                  "What will you do?",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text("Current Amount available: ${currentBalance ?? "---"} ETH"),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 60.0),
+                child: TextFormField(
+                  keyboardType: TextInputType.number,
+                  controller: _controller,
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        double.tryParse(value) == null) {
+                      return 'Please enter a valid amount';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Enter an amount in ETH',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        setState(() {
+                          withdraw(
+                            EtherAmount.fromBigInt(
+                              EtherUnit.ether,
+                              BigInt.from(
+                                double.parse(_controller.value.text),
+                              ),
+                            ),
+                          );
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange, // This is what you need!
+                    ),
+                    child: const Text('Withdraw'),
+                  ),
+                  const SizedBox(width: 40),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        // validation guarantees a double
+                        setState(() {
+                          deposit(
+                            EtherAmount.fromBigInt(
+                              EtherUnit.ether,
+                              BigInt.from(
+                                double.parse(_controller.value.text),
+                              ),
+                            ),
+                          );
+                        });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal, // This is what you need!
+                    ),
+                    child: const Text('Deposit'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

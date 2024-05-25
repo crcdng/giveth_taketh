@@ -10,9 +10,13 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SafeArea(
+    return SafeArea(
       child: MaterialApp(
-        home: AppScreen(),
+        theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
+            useMaterial3: false,
+            fontFamily: 'CourierPrime'),
+        home: const AppScreen(),
         title: "Giveth Taketh",
       ),
     );

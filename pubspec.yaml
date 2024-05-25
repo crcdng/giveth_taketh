@@ -22,3 +22,11 @@ flutter:
   uses-material-design: true
   assets: 
     - assets/abi.json
+  fonts:
+    - family: CourierPrime
+      fonts:
+        - asset: fonts/CourierPrime-Regular.ttf
+        - asset: fonts/CourierPrime-Italic.ttf
+          style: italic
+        - asset: fonts/CourierPrime-Bold.ttf
+        - asset: fonts/CourierPrime-BoldItalic.ttf
