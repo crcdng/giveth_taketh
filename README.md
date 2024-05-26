@@ -4,7 +4,7 @@ a tiny socio-economic experiment (EthBerlin hackathon)
 
 platform: Android for now (see [this issue](https://github.com/WalletConnect/Web3ModalFlutter/issues/108))
 
-interacts with the smart contract at address [0x5A7e83A6975cba64b4745946c53230bFA49D352D](https://sepolia.etherscan.io/address/0x5A7e83A6975cba64b4745946c53230bFA49D352D) on the Sepolia testnet
+interacts with the smart contract at address [0x8EA3C9e14694F820F11c054a630607cf59C02FAC](https://sepolia.etherscan.io/address/0x8EA3C9e14694F820F11c054a630607cf59C02FAC) on the Sepolia testnet
 
 requires metamask or similar wallet installed on the device
 
