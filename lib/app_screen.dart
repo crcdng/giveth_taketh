@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:giveth_taketh/history_screen.dart';
 import 'package:http/http.dart';
 // import 'package:web3dart/web3dart.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
@@ -71,7 +72,7 @@ class _AppScreenState extends State<AppScreen> {
     if (!mounted) {
       return;
     }
-    if (_hash != "") {
+    if (_hash != null && _hash != "") {
       ScaffoldMessenger.of(context).showSnackBar(successSnackBar);
     }
   }
@@ -351,6 +352,7 @@ class _AppScreenState extends State<AppScreen> {
                   children: [
                     if (_walletConnected)
                       W3MAccountButton(service: _w3mService),
+                    const SizedBox(width: 10),
                     W3MConnectWalletButton(service: _w3mService),
                   ],
                 ),
@@ -384,7 +386,8 @@ class _AppScreenState extends State<AppScreen> {
               const SizedBox(height: 20),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 60.0),
-                child: Text("Note this prototype runs on the Sepolia testnet.",
+                child: Text(
+                    "Note that this prototype runs on the Sepolia testnet.",
                     style: TextStyle(color: Colors.red)),
               ),
               const SizedBox(height: 20),
@@ -455,6 +458,17 @@ class _AppScreenState extends State<AppScreen> {
                 ],
               ),
               const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                    child: const Text('Get History'),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const HistoryScreen()),
+                      );
+                    }),
+              ),
             ],
           ),
         ),
