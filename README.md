@@ -26,12 +26,14 @@ flutter run \
 --dart-define TEST_PRIVATE_KEY=<YOUR TEST SIGNER PRIVATE KEY> \
 --dart-define ETHERSCAN_KEY=<YOUR ETHERSCAN API KEY> \
 --hot
-
 ```
+
+# Work in progress (post Hackathon) 
+
+- Metamask signing still broken, some progress
 
 # Open Issues 
 
-- Metamask signing does not work yet
 - Metamask connection does not work on web, see [this issue](https://github.com/WalletConnect/Web3ModalFlutter/issues/108)
 - Sepolia testnet hardcoded into the app, needs to be deployed on mainnet
 - Histury amount of transaction needs to be figured out

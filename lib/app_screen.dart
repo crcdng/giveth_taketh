@@ -171,6 +171,8 @@ class _AppScreenState extends State<AppScreen> {
     }
   }
 
+  // ---- low level functions
+
   Future<List<dynamic>> query(String functionName, List<dynamic> params) async {
     final contract = await loadContractFromAbi();
     final ethFunction = contract.function(functionName);
@@ -188,27 +190,53 @@ class _AppScreenState extends State<AppScreen> {
     return contract;
   }
 
-  Future<TransactionHash> transact(
-      {required String functionName,
-      required List<dynamic> params,
-      EtherAmount? etherAmount}) async {
+  // Future<TransactionHash> transact(
+  //     {required String functionName,
+  //     required List<dynamic> params,
+  //     EtherAmount? etherAmount}) async {
+  //   final contract = await loadContractFromAbi();
+  //   final ethFunction = contract.function(functionName);
+  //   // TODO replace with web3modal sign function
+  //   EthPrivateKey credentials =
+  //       EthPrivateKey.fromHex(constants.testPrivateKey); // Temp account
+  //   try {
+  //     final result = await _ethClient.sendTransaction(
+  //         credentials,
+  //         Transaction.callContract(
+  //             contract: contract,
+  //             function: ethFunction,
+  //             parameters: params,
+  //             value: etherAmount),
+  //         chainId: null,
+  //         fetchChainIdFromNetworkId: true);
+  //     return result;
+  //   } on RPCError {
+  //     return "";
+  //   }
+  // }
+
+  Future<dynamic> transact({
+    required String functionName,
+    required List<dynamic> params,
+    EtherAmount? etherAmount,
+  }) async {
     final contract = await loadContractFromAbi();
-    final ethFunction = contract.function(functionName);
-    // TODO replace with web3modal sign function
-    EthPrivateKey credentials =
-        EthPrivateKey.fromHex(constants.testPrivateKey); // Temp account
     try {
-      final result = await _ethClient.sendTransaction(
-          credentials,
-          Transaction.callContract(
-              contract: contract,
-              function: ethFunction,
-              parameters: params,
-              value: etherAmount),
-          chainId: null,
-          fetchChainIdFromNetworkId: true);
+      print(_w3mService.session);
+      final result = await _w3mService.requestWriteContract(
+        topic: _w3mService.session!.topic ?? '',
+        chainId: _w3mService.selectedChain!.namespace,
+        rpcUrl: constants.jsonRpcUrl,
+        deployedContract: contract,
+        functionName: functionName,
+        transaction: Transaction(
+          from: EthereumAddress.fromHex(_w3mService.session!.address!),
+        ),
+        parameters: params,
+      );
       return result;
-    } on RPCError {
+    } catch (e) {
+      print(e);
       return "";
     }
   }
