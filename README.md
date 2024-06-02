@@ -11,7 +11,7 @@ This means web3dart alone works fine for testing but it is not useful by itself 
 - web3dart handles talking to the smart contract
 - Web3ModalFlutter handles the Wallet connection and signing
 
-but [I was wrong](https://github.com/WalletConnect/Web3ModalFlutter/issues/133) - see also [this issue](https://github.com/xclud/web3dart/issues/145). In addition, Web3ModalFlutter does not work with Flutter Web and apparently even if it does, [it will not work with Metamask](https://github.com/WalletConnect/Web3ModalFlutter/issues/108) (This is the reason I started developing this dApp on Android).
+but [I was wrong](https://github.com/WalletConnect/Web3ModalFlutter/issues/133) - see also [this issue](https://github.com/xclud/web3dart/issues/145). In addition, Web3ModalFlutter does not work with Flutter Web and apparently even when it will do so, [it still will not work with Metamask](https://github.com/WalletConnect/Web3ModalFlutter/issues/108) (This is the reason I started developing this dApp on Android).
 
 Compared to the situation with tools and APIs available in the JavaScript ecosystem, Flutter currently is a no-go area for web3. **So far I could not find a single up-to-date open source Flutter dApp that does transactions and allows signing with an installed wallet.** Blog posts and tutorials on Flutter and web3 are outdated - [see here](https://ethereum.org/en/developers/docs/programming-languages/dart/) for example - they reference deprecated tools like `truffle` or the abandoned `flutter_web3 repository`. I have reason to believe I was the only among 600+ hackers at ETHBERLIN to attempt building a dApp with Flutter.  
  
