@@ -9,13 +9,13 @@ By default a Flutter developer would first look at [web3dart](https://pub.dev/pa
 This means web3dart alone works fine for testing but it is not useful by itself if you want to develop a dApp. From the provided descriptions, I did expect that this missing functionality would be provided by [Web3ModalFlutter](https://github.com/WalletConnect/Web3ModalFlutter) and that these two libraries would complement each other: 
 
 - web3dart handles talking to the smart contract
-- Web3ModalFlutter handles the Wallet connection
+- Web3ModalFlutter handles the Wallet connection and signing
 
-but [I was wrong](https://github.com/WalletConnect/Web3ModalFlutter/issues/133) - see also [this issue](https://github.com/xclud/web3dart/issues/145).
+but [I was wrong](https://github.com/WalletConnect/Web3ModalFlutter/issues/133) - see also [this issue](https://github.com/xclud/web3dart/issues/145). In addition, Web3ModalFlutter does not work with Flutter Web and apparently even if it does, [it will not work with Metamask](https://github.com/WalletConnect/Web3ModalFlutter/issues/108). This is the reason I started developing this dApp on Android for now.
 
-**So far I could not find a single up-to-date open source Flutter dApp that does transactions and allows signing with an installed wallet.** Blog posts and tutorials on Flutter and web3 are outdated - [see here](https://ethereum.org/en/developers/docs/programming-languages/dart/) for example - they reference deprecated tools like `truffle` or the abandoned `flutter_web3 repository`. I have reason to believe I was the only among 600+ hackers at ETHBERLIN to attempt build a dApp with Flutter.  
+Compared to the situation with tools and APIs available in the JavaScript ecosystem, Flutter currently is a no-go area for web3. **So far I could not find a single up-to-date open source Flutter dApp that does transactions and allows signing with an installed wallet.** Blog posts and tutorials on Flutter and web3 are outdated - [see here](https://ethereum.org/en/developers/docs/programming-languages/dart/) for example - they reference deprecated tools like `truffle` or the abandoned `flutter_web3 repository`. I have reason to believe I was the only among 600+ hackers at ETHBERLIN to attempt build a dApp with Flutter.  
  
-Therefore this code currently is a mess (a.k.a. 'hackathon architecture') and basically broken while I am trying to figure out getting these things to work. If you know of a working, up to date example that does the two minimal things necessary for a dApp in Flutter, please create an issue below.  
+Therefore this code currently is a broken mess (a.k.a. 'hackathon architecture') while I try to figure out getting these things to work. If you know of a working, up to date example that does the two minimal things necessary for a dApp in Flutter, please create an issue below.  
 
 Here is what I am building: 
 
