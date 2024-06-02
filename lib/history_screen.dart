@@ -64,8 +64,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     snapshot.data![index].functionName == "deposit()";
                 return ListTile(
                   leading: isDeposit
-                      ? Icon(Icons.arrow_upward)
-                      : Icon(Icons.arrow_downward),
+                      ? const Icon(Icons.arrow_upward)
+                      : const Icon(Icons.arrow_downward),
                   // TODO refactor
                   title: isDeposit
                       ? Text(
