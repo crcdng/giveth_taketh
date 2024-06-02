@@ -141,6 +141,7 @@ class _AppScreenState extends State<AppScreen> {
   Future<TransactionHash> deposit(EtherAmount etherAmount) async {
     TransactionHash result = await transact(
         functionName: "deposit", params: [], etherAmount: etherAmount);
+    if (kDebugMode) print("deposit result: $result");
     return result;
   }
 
@@ -190,56 +191,56 @@ class _AppScreenState extends State<AppScreen> {
     return contract;
   }
 
-  // Future<TransactionHash> transact(
-  //     {required String functionName,
-  //     required List<dynamic> params,
-  //     EtherAmount? etherAmount}) async {
-  //   final contract = await loadContractFromAbi();
-  //   final ethFunction = contract.function(functionName);
-  //   // TODO replace with web3modal sign function
-  //   EthPrivateKey credentials =
-  //       EthPrivateKey.fromHex(constants.testPrivateKey); // Temp account
-  //   try {
-  //     final result = await _ethClient.sendTransaction(
-  //         credentials,
-  //         Transaction.callContract(
-  //             contract: contract,
-  //             function: ethFunction,
-  //             parameters: params,
-  //             value: etherAmount),
-  //         chainId: null,
-  //         fetchChainIdFromNetworkId: true);
-  //     return result;
-  //   } on RPCError {
-  //     return "";
-  //   }
-  // }
-
-  Future<dynamic> transact({
-    required String functionName,
-    required List<dynamic> params,
-    EtherAmount? etherAmount,
-  }) async {
+  Future<TransactionHash> transact(
+      {required String functionName,
+      required List<dynamic> params,
+      EtherAmount? etherAmount}) async {
     final contract = await loadContractFromAbi();
+    final ethFunction = contract.function(functionName);
+    // TODO replace with web3modal sign function
+    EthPrivateKey credentials =
+        EthPrivateKey.fromHex(constants.testPrivateKey); // Temp account
     try {
-      print(_w3mService.session);
-      final result = await _w3mService.requestWriteContract(
-        topic: _w3mService.session!.topic ?? '',
-        chainId: _w3mService.selectedChain!.namespace,
-        rpcUrl: constants.jsonRpcUrl,
-        deployedContract: contract,
-        functionName: functionName,
-        transaction: Transaction(
-          from: EthereumAddress.fromHex(_w3mService.session!.address!),
-        ),
-        parameters: params,
-      );
+      final result = await _ethClient.sendTransaction(
+          credentials,
+          Transaction.callContract(
+              contract: contract,
+              function: ethFunction,
+              parameters: params,
+              value: etherAmount),
+          chainId: null,
+          fetchChainIdFromNetworkId: true);
       return result;
-    } catch (e) {
-      print(e);
+    } on RPCError {
       return "";
     }
   }
+
+  // Future<dynamic> transact({
+  //   required String functionName,
+  //   required List<dynamic> params,
+  //   EtherAmount? etherAmount,
+  // }) async {
+  //   final contract = await loadContractFromAbi();
+  //   try {
+  //     print(_w3mService.session);
+  //     final result = await _w3mService.requestWriteContract(
+  //       topic: _w3mService.session!.topic ?? '',
+  //       chainId: _w3mService.selectedChain!.namespace,
+  //       rpcUrl: constants.jsonRpcUrl,
+  //       deployedContract: contract,
+  //       functionName: functionName,
+  //       transaction: Transaction(
+  //         from: EthereumAddress.fromHex(_w3mService.session!.address!),
+  //       ),
+  //       parameters: params,
+  //     );
+  //     return result;
+  //   } catch (e) {
+  //     print(e);
+  //     return "";
+  //   }
+  // }
 
   // ---- w3modal
 
