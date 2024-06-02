@@ -17,7 +17,9 @@ but [I was wrong](https://github.com/WalletConnect/Web3ModalFlutter/issues/133) 
  
 Therefore this code currently is a mess (a.k.a. 'hackathon architecture') and basically broken while I am trying to figure out getting these things to work. If you know of a working, up to date example that does the two minimal things necessary for a dApp in Flutter, please create an issue below.  
 
-Here is what I am trying to build: 
+Here is what I am building: 
+
+![](docs/screenshot.png)
 
 a tiny socio-economic experiment (EthBerlin hackathon)
 
